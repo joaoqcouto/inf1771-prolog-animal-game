@@ -1,13 +1,14 @@
-% árvore inicial
+% arvore de conhecimento
+:- dynamic tree/1.
 tree(
 [
-  "Mamifero?",
+  "Eh mamifero?",
   [
     [
       "Tem listras?",
       [
-        ["Eu chuto zebra!", []],
-        ["Eu chuto leao!", []]
+        "zebra",
+        "leao"
       ]
     ],
     [
@@ -16,16 +17,22 @@ tree(
         [
           "Ele voa?",
           [
-            ["Eu chuto aguia!", []],
-            ["Eu chuto pinguim!", []]
+            "aguia",
+            "pinguim"
           ]
         ],
-        "Eu chuto lagarto!"
+        "lagarto"
       ]
     ]
   ]
 ]
 ).
+
+% algoritmo de substituicao
+subs(_, _, [], []).
+subs(X, Y, [X|T1], [Y|T2]) :- subs(X, Y, T1, T2), !.
+subs(X, Y, [H|T1], [H|T2]) :- \+ is_list(H), subs(X, Y, T1, T2), !.
+subs(X, Y, [H1|T1], [H2|T2]) :- subs(X, Y, H1, H2), subs(X, Y, T1, T2).
 
 % associa a X o que estiver no 'sim' da lista L (posicao 0)
 sim(X, L):-
@@ -41,30 +48,60 @@ errou():- write("Droga! Errei!"), nl, nl.
 
 % faz uma pergunta pro usuário, avança com a resposta
 pergunta(T, Re):-
-  T = [P, Rs],
-  write(P), write(" (responda s. ou n.)"), nl,
-  read(RESP), nl,
   (
-    % se respondeu sim ou nao
-    RESP = s ->
-      (
-        % checando se o jogo acabou
-        Rs = [] ->
-          acertou(),
-          play_again(Re)
+    % se eh o fim ou nao
+    T = [P, Rs] ->
+      % ainda tem perguntas
+        write(P), write(" (responda s. ou n.)"), nl,
+        read(RESP), nl,
+        (
+          RESP = s ->
+            % respondeu sim
+            sim(Re, Rs)
           ;
-          sim(Re, Rs)
-      )
-    ;
-      (
-        % checando se o jogo acabou
-        Rs = [] ->
-          errou(),
-          play_again(Re)
+            % respondeu nao
+            nao(Re, Rs)
+        )
+      ;
+      % resposta final eh T
+        T = Re,
+        atom_concat("Eu chuto ", Re, CHUTO),
+        atom_concat(CHUTO, "!", CHUTEFINAL),
+        write(CHUTEFINAL), write(" (responda s. ou n.)"), nl,
+        read(RESP), nl,
+        (
+          RESP = s ->
+            % respondeu sim
+            acertou(),
+            play_again(Re)
           ;
-          nao(Re, Rs)
-      )
+            % respondeu nao
+            errou(),
+            aprende(Re),
+            play_again(Re)
+        )
   ).
+
+% aprendizado por rodada
+aprende(T):-
+  write("Em qual animal voce estava pensando? "), nl,
+  read(CORRECT), nl,
+
+  atom_concat("Que pergunta seria verdadeira para ", CORRECT, QUEPERG1),
+  atom_concat(QUEPERG1, " e falsa para ", QUEPERG2),
+  atom_concat(QUEPERG2, T, QUEPERG3),
+  atom_concat(QUEPERG3, "?", PERGUNTA),
+  write(PERGUNTA), nl,
+  read(NEWQUEST), nl,
+
+  NewNode = [NEWQUEST , [CORRECT, T]],
+  tree(FullTree),
+
+  subs(T, NewNode, FullTree, NewTree),
+
+  retract(tree(FullTree)),
+  assert(tree(NewTree)),
+  write("Entendido!"), nl, nl.
 
 % jogo
 jogo(TREE):-
