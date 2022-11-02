@@ -1,32 +1,5 @@
-% arvore de conhecimento
-:- dynamic tree/1.
-tree(
-[
-  "Eh mamifero?",
-  [
-    [
-      "Tem listras?",
-      [
-        "zebra",
-        "leao"
-      ]
-    ],
-    [
-      "Passaro?",
-      [
-        [
-          "Ele voa?",
-          [
-            "aguia",
-            "pinguim"
-          ]
-        ],
-        "lagarto"
-      ]
-    ]
-  ]
-]
-).
+% arvore de conhecimento em arvore-conhecimento.pl
+% para programa funcionar mudar working_directory para o diretorio com os arquivos prolog (rodar working_directory(_, "caminho"). )
 
 % algoritmo de substituicao
 subs(_, _, [], []).
@@ -73,12 +46,12 @@ pergunta(T, Re):-
           RESP = s ->
             % respondeu sim
             acertou(),
-            play_again(Re)
+            play_again()
           ;
             % respondeu nao
             errou(),
             aprende(Re),
-            play_again(Re)
+            play_again()
         )
   ).
 
@@ -101,6 +74,7 @@ aprende(T):-
 
   retract(tree(FullTree)),
   assert(tree(NewTree)),
+  save_tree(),
   write("Entendido!"), nl, nl.
 
 % jogo
@@ -110,11 +84,12 @@ jogo(TREE):-
 
 % inicio do jogo
 start_game():-
+  load_tree(),
   tree(TREE),
   jogo(TREE).
 
 % jogar de novo
-play_again(Re):-
+play_again():-
   write("Jogar de novo? (responda s. ou n.)"), nl,
   read(RESP), nl,
   (
@@ -123,6 +98,13 @@ play_again(Re):-
       start_game()
     ;
       write("Ate mais!"), nl, nl,
-      Re=0
+      fail
   ).
 
+% salva conhecimento
+save_tree():-
+  tell('arvore-conhecimento.pl'),
+  listing(tree),
+  told().
+
+load_tree():- consult("arvore-conhecimento.pl").
