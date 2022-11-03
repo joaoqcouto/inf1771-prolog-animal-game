@@ -4,6 +4,8 @@ Jogo dos animais em Prolog, jogo tenta adivinhar o animal que você está pensan
 
 - Para jogar:
 ```
+working_directory(_, <diretório onde está animais-prolog.pl> ).
+consult("animais-prolog.pl").
 start_game(). 
 ```
 
@@ -12,5 +14,4 @@ start_game().
 ![imagem do jogo](https://i.imgur.com/wGXTGQc.png)
 
 - Futuras features:
-  - Salvar nova árvore de respostas no disco
   - Possivelmente GUI
